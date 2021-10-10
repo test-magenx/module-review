@@ -1,5 +1,7 @@
 <?php
 /**
+ * Review renderer
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -9,21 +11,13 @@ namespace Magento\Review\Block\Product;
 use Magento\Catalog\Block\Product\ReviewRendererInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\View\Element\Template;
-use Magento\Framework\View\Element\Template\Context;
-use Magento\Review\Model\AppendSummaryDataFactory;
-use Magento\Review\Model\Review;
-use Magento\Review\Model\ReviewFactory;
 use Magento\Review\Model\ReviewSummaryFactory;
 use Magento\Review\Observer\PredispatchReviewObserver;
-use Magento\Store\Model\ScopeInterface;
 
 /**
- * Review renderer
+ * Class ReviewRenderer
  */
-class ReviewRenderer extends Template implements ReviewRendererInterface
+class ReviewRenderer extends \Magento\Framework\View\Element\Template implements ReviewRendererInterface
 {
     /**
      * Array of available template name
@@ -38,7 +32,7 @@ class ReviewRenderer extends Template implements ReviewRendererInterface
     /**
      * Review model factory
      *
-     * @var ReviewFactory
+     * @var \Magento\Review\Model\ReviewFactory
      */
     protected $_reviewFactory;
 
@@ -48,29 +42,20 @@ class ReviewRenderer extends Template implements ReviewRendererInterface
     private $reviewSummaryFactory;
 
     /**
-     * @var AppendSummaryDataFactory
-     */
-    private $appendSummaryDataFactory;
-
-    /**
-     * @param Context $context
-     * @param ReviewFactory $reviewFactory
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param \Magento\Review\Model\ReviewFactory $reviewFactory
      * @param array $data
-     * @param ReviewSummaryFactory|null $reviewSummaryFactory
-     * @param AppendSummaryDataFactory|null $appendSummaryDataFactory
+     * @param ReviewSummaryFactory $reviewSummaryFactory
      */
     public function __construct(
-        Context $context,
-        ReviewFactory $reviewFactory,
+        \Magento\Framework\View\Element\Template\Context $context,
+        \Magento\Review\Model\ReviewFactory $reviewFactory,
         array $data = [],
-        ReviewSummaryFactory $reviewSummaryFactory = null,
-        AppendSummaryDataFactory $appendSummaryDataFactory = null
+        ReviewSummaryFactory $reviewSummaryFactory = null
     ) {
         $this->_reviewFactory = $reviewFactory;
         $this->reviewSummaryFactory = $reviewSummaryFactory ??
             ObjectManager::getInstance()->get(ReviewSummaryFactory::class);
-        $this->appendSummaryDataFactory = $appendSummaryDataFactory ??
-            ObjectManager::getInstance()->get(AppendSummaryDataFactory::class);
         parent::__construct($context, $data);
     }
 
@@ -83,7 +68,7 @@ class ReviewRenderer extends Template implements ReviewRendererInterface
     {
         return $this->_scopeConfig->getValue(
             PredispatchReviewObserver::XML_PATH_REVIEW_ACTIVE,
-            ScopeInterface::SCOPE_STORE
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
     }
 
@@ -95,21 +80,19 @@ class ReviewRenderer extends Template implements ReviewRendererInterface
      * @param bool $displayIfNoReviews
      *
      * @return string
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function getReviewsSummaryHtml(
-        Product $product,
+        \Magento\Catalog\Model\Product $product,
         $templateType = self::DEFAULT_VIEW,
         $displayIfNoReviews = false
     ) {
         if ($product->getRatingSummary() === null) {
-            $this->appendSummaryDataFactory->create()
-                ->execute(
-                    $product,
-                    $this->_storeManager->getStore()->getId(),
-                    Review::ENTITY_PRODUCT_CODE
-                );
+            $this->reviewSummaryFactory->create()->appendSummaryDataToObject(
+                $product,
+                $this->_storeManager->getStore()->getId()
+            );
         }
 
         if (null === $product->getRatingSummary() && !$displayIfNoReviews) {

@@ -187,14 +187,15 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 \Magento\Backend\Block\Store\Switcher\Form\Renderer\Fieldset\Element::class
             );
             $field->setRenderer($renderer);
+            $review->setSelectStores($review->getStores());
         } else {
             $fieldset->addField(
                 'select_stores',
                 'hidden',
-                ['name' => 'stores[]', 'value' => $review->getStores()]
+                ['name' => 'stores[]', 'value' => $this->_storeManager->getStore(true)->getId()]
             );
+            $review->setSelectStores($this->_storeManager->getStore(true)->getId());
         }
-        $review->setSelectStores($review->getStores());
 
         $fieldset->addField(
             'nickname',

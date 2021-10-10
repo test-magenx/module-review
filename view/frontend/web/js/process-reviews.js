@@ -27,7 +27,7 @@ define([
                     event.preventDefault();
                 });
             });
-        }).always(function () {
+        }).complete(function () {
             if (fromPages == true) { //eslint-disable-line eqeqeq
                 $('html, body').animate({
                     scrollTop: $('#reviews').offset().top - 50

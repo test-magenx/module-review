@@ -103,10 +103,9 @@ class View extends \Magento\Catalog\Block\Product\AbstractProduct
      */
     public function getRating()
     {
-        $reviewId = $this->getReviewId() ?: $this->getReviewData()->getId();
         if (!$this->getRatingCollection()) {
             $ratingCollection = $this->_voteFactory->create()->getResourceCollection()->setReviewFilter(
-                $reviewId
+                $this->getReviewId()
             )->setStoreFilter(
                 $this->_storeManager->getStore()->getId()
             )->addRatingInfo(
