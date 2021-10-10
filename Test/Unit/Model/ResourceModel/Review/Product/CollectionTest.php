@@ -36,21 +36,18 @@ class CollectionTest extends TestCase
     /**
      * @var Collection
      */
-    private $model;
+    protected $model;
 
     /**
      * @var MockObject
      */
-    private $connectionMock;
+    protected $connectionMock;
 
     /**
      * @var MockObject
      */
-    private $dbSelect;
+    protected $dbSelect;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $this->markTestSkipped('MAGETWO-59234: Code under the test depends on a virtual type which cannot be mocked.');
@@ -108,12 +105,10 @@ class CollectionTest extends TestCase
     }
 
     /**
-     * @param $attribute
-     *
-     * @return void
      * @dataProvider addAttributeToFilterDataProvider
+     * @param $attribute
      */
-    public function testAddAttributeToFilter($attribute): void
+    public function testAddAttributeToFilter($attribute)
     {
         $conditionSqlQuery = 'sqlQuery';
         $condition = ['eq' => 'value'];
@@ -132,7 +127,7 @@ class CollectionTest extends TestCase
     /**
      * @return array
      */
-    public function addAttributeToFilterDataProvider(): array
+    public function addAttributeToFilterDataProvider()
     {
         return [
             ['rt.review_id'],
@@ -140,17 +135,17 @@ class CollectionTest extends TestCase
             ['rt.status_id'],
             ['rdt.title'],
             ['rdt.nickname'],
-            ['rdt.detail']
+            ['rdt.detail'],
+
         ];
     }
 
-    /**
-     * @return void
-     */
-    public function testAddAttributeToFilterWithAttributeStore(): void
+    public function testAddAttributeToFilterWithAttributeStore()
     {
         $storeId = 1;
-        $this->connectionMock->method('quoteInto')
+        $this->connectionMock
+            ->expects($this->at(0))
+            ->method('quoteInto')
             ->with('rt.review_id=store.review_id AND store.store_id = ?', $storeId)
             ->willReturn('sqlQuery');
         $this->model->addAttributeToFilter('stores', ['eq' => $storeId]);
@@ -158,29 +153,29 @@ class CollectionTest extends TestCase
     }
 
     /**
+     * @dataProvider addAttributeToFilterWithAttributeTypeDataProvider
      * @param $condition
      * @param $sqlConditionWith
      * @param $sqlConditionWithSec
      * @param $doubleConditionSqlQuery
-     *
-     * @return void
-     * @dataProvider addAttributeToFilterWithAttributeTypeDataProvider
      */
     public function testAddAttributeToFilterWithAttributeType(
         $condition,
         $sqlConditionWith,
         $sqlConditionWithSec,
         $doubleConditionSqlQuery
-    ): void {
+    ) {
         $conditionSqlQuery = 'sqlQuery';
-
+        $this->connectionMock
+            ->expects($this->at(0))
+            ->method('prepareSqlCondition')
+            ->with('rdt.customer_id', $sqlConditionWith)
+            ->willReturn($conditionSqlQuery);
         if ($sqlConditionWithSec) {
-            $this->connectionMock->method('prepareSqlCondition')
-                ->withConsecutive(['rdt.customer_id', $sqlConditionWith], ['rdt.store_id', $sqlConditionWithSec])
-                ->willReturnOnConsecutiveCalls($conditionSqlQuery, $conditionSqlQuery);
-        } else {
-            $this->connectionMock->method('prepareSqlCondition')
-                ->with('rdt.customer_id', $sqlConditionWith)
+            $this->connectionMock
+                ->expects($this->at(1))
+                ->method('prepareSqlCondition')
+                ->with('rdt.store_id', $sqlConditionWithSec)
                 ->willReturn($conditionSqlQuery);
         }
         $conditionSqlQuery = $doubleConditionSqlQuery
@@ -196,7 +191,7 @@ class CollectionTest extends TestCase
     /**
      * @return array
      */
-    public function addAttributeToFilterWithAttributeTypeDataProvider(): array
+    public function addAttributeToFilterWithAttributeTypeDataProvider()
     {
         $exprNull = new \Zend_Db_Expr('NULL');
         $defaultStore = Store::DEFAULT_STORE_ID;

@@ -66,7 +66,7 @@ class PredispatchReviewObserverTest extends TestCase
             ->getMockForAbstractClass();
         $this->responseMock = $this->getMockBuilder(ResponseInterface::class)
             ->disableOriginalConstructor()
-            ->addMethods(['setRedirect'])
+            ->setMethods(['setRedirect'])
             ->getMockForAbstractClass();
         $this->redirectMock = $this->getMockBuilder(RedirectInterface::class)
             ->getMock();
@@ -82,15 +82,12 @@ class PredispatchReviewObserverTest extends TestCase
 
     /**
      * Test with enabled review active config.
-     *
-     * @return void
      */
     public function testReviewEnabled() : void
     {
         $observerMock = $this->getMockBuilder(Observer::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getData'])
-            ->addMethods(['getResponse', 'setRedirect'])
+            ->setMethods(['getResponse', 'getData', 'setRedirect'])
             ->getMockForAbstractClass();
 
         $this->configMock->method('getValue')
@@ -110,24 +107,25 @@ class PredispatchReviewObserverTest extends TestCase
 
     /**
      * Test with disabled review active config.
-     *
-     * @return void
      */
     public function testReviewDisabled() : void
     {
         $observerMock = $this->getMockBuilder(Observer::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getControllerAction', 'getResponse'])
+            ->setMethods(['getControllerAction', 'getResponse'])
             ->getMockForAbstractClass();
+
+        $this->configMock->expects($this->at(0))
+            ->method('getValue')
+            ->with(PredispatchReviewObserver::XML_PATH_REVIEW_ACTIVE, ScopeInterface::SCOPE_STORE)
+            ->willReturn(false);
 
         $expectedRedirectUrl = 'https://test.com/index';
 
-        $this->configMock
+        $this->configMock->expects($this->at(1))
             ->method('getValue')
-            ->withConsecutive(
-                [PredispatchReviewObserver::XML_PATH_REVIEW_ACTIVE, ScopeInterface::SCOPE_STORE],
-                ['web/default/no_route', ScopeInterface::SCOPE_STORE]
-            )->willReturnOnConsecutiveCalls(false, $expectedRedirectUrl);
+            ->with('web/default/no_route', ScopeInterface::SCOPE_STORE)
+            ->willReturn($expectedRedirectUrl);
 
         $this->urlMock->expects($this->once())
             ->method('getUrl')

@@ -50,9 +50,6 @@ class CollectionTest extends TestCase
      */
     protected $objectManager;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $store = $this->createPartialMock(Store::class, ['getId']);
@@ -62,11 +59,11 @@ class CollectionTest extends TestCase
         $this->objectManager = (new ObjectManager($this));
         $this->resourceMock = $this->getMockBuilder(AbstractDb::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getConnection', 'getMainTable', 'getTable'])
+            ->setMethods(['getConnection', 'getMainTable', 'getTable'])
             ->getMockForAbstractClass();
         $this->readerAdapterMock = $this->getMockBuilder(Mysql::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['select', 'prepareSqlCondition', 'quoteInto'])
+            ->setMethods(['select', 'prepareSqlCondition', 'quoteInto'])
             ->getMockForAbstractClass();
         $this->selectMock = $this->getMockBuilder(Select::class)
             ->disableOriginalConstructor()
@@ -94,10 +91,7 @@ class CollectionTest extends TestCase
         );
     }
 
-    /**
-     * @return void
-     */
-    public function testInitSelect(): void
+    public function testInitSelect()
     {
         $this->selectMock->expects($this->once())
             ->method('join')
@@ -115,10 +109,7 @@ class CollectionTest extends TestCase
         );
     }
 
-    /**
-     * @return void
-     */
-    public function testAddStoreFilter(): void
+    public function testAddStoreFilter()
     {
         $this->readerAdapterMock->expects($this->once())
             ->method('prepareSqlCondition');
@@ -135,30 +126,30 @@ class CollectionTest extends TestCase
     /**
      * @param int|string $entity
      * @param int $pkValue
-     * @param array $quoteIntoArguments1
-     * @param array $quoteIntoArguments2
+     * @param string $quoteIntoArguments1
+     * @param string $quoteIntoArguments2
      * @param string $quoteIntoReturn1
      * @param string $quoteIntoReturn2
      * @param int $callNum
-     *
-     * @return void
      * @dataProvider addEntityFilterDataProvider
      */
     public function testAddEntityFilter(
         $entity,
-        int $pkValue,
-        array $quoteIntoArguments1,
-        array $quoteIntoArguments2,
-        string $quoteIntoReturn1,
-        string $quoteIntoReturn2,
-        int $callNum
-    ): void {
-        $this->readerAdapterMock
+        $pkValue,
+        $quoteIntoArguments1,
+        $quoteIntoArguments2,
+        $quoteIntoReturn1,
+        $quoteIntoReturn2,
+        $callNum
+    ) {
+        $this->readerAdapterMock->expects($this->at(0))
             ->method('quoteInto')
-            ->withConsecutive(
-                [$quoteIntoArguments1[0], $quoteIntoArguments1[1]],
-                [$quoteIntoArguments2[0], $quoteIntoArguments2[1]]
-            )->willReturnOnConsecutiveCalls($quoteIntoReturn1, $quoteIntoReturn2);
+            ->with($quoteIntoArguments1[0], $quoteIntoArguments1[1])
+            ->willReturn($quoteIntoReturn1);
+        $this->readerAdapterMock->expects($this->at(1))
+            ->method('quoteInto')
+            ->with($quoteIntoArguments2[0], $quoteIntoArguments2[1])
+            ->willReturn($quoteIntoReturn2);
         $this->selectMock->expects($this->exactly($callNum))
             ->method('join')
             ->with(
@@ -172,7 +163,7 @@ class CollectionTest extends TestCase
     /**
      * @return array
      */
-    public function addEntityFilterDataProvider(): array
+    public function addEntityFilterDataProvider()
     {
         return [
             [
@@ -196,10 +187,7 @@ class CollectionTest extends TestCase
         ];
     }
 
-    /**
-     * @return void
-     */
-    public function testAddReviewsTotalCount(): void
+    public function testAddReviewsTotalCount()
     {
         $this->selectMock->expects($this->once())
             ->method('joinLeft')

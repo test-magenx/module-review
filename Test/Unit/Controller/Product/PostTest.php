@@ -122,8 +122,6 @@ class PostTest extends TestCase
     protected $resultRedirectMock;
 
     /**
-     * @inheritDoc
-     *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     protected function setUp(): void
@@ -217,10 +215,9 @@ class PostTest extends TestCase
     }
 
     /**
-     * @return void
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
-    public function testExecute(): void
+    public function testExecute()
     {
         $reviewData = [
             'ratings' => [1 => 1],
@@ -237,10 +234,12 @@ class PostTest extends TestCase
         $this->reviewSession->expects($this->any())->method('getFormData')
             ->with(true)
             ->willReturn($reviewData);
-        $this->request
-            ->method('getParam')
-            ->withConsecutive(['category', false], ['id'])
-            ->willReturnOnConsecutiveCalls(false, 1);
+        $this->request->expects($this->at(0))->method('getParam')
+            ->with('category', false)
+            ->willReturn(false);
+        $this->request->expects($this->at(1))->method('getParam')
+            ->with('id')
+            ->willReturn(1);
         $product = $this->createPartialMock(
             Product::class,
             ['__wakeup', 'isVisibleInCatalog', 'isVisibleInSiteVisibility', 'getId', 'getWebsiteIds']
@@ -263,10 +262,12 @@ class PostTest extends TestCase
         $this->productRepository->expects($this->any())->method('getById')
             ->with(1)
             ->willReturn($product);
-        $this->coreRegistry
-            ->method('register')
-            ->withConsecutive(['current_product', $product], ['product', $product])
-            ->willReturnOnConsecutiveCalls($this->coreRegistry, $this->coreRegistry);
+        $this->coreRegistry->expects($this->at(0))->method('register')
+            ->with('current_product', $product)
+            ->willReturnSelf();
+        $this->coreRegistry->expects($this->at(1))->method('register')
+            ->with('product', $product)
+            ->willReturnSelf();
         $this->review->expects($this->once())->method('setData')
             ->with($reviewData)
             ->willReturnSelf();
